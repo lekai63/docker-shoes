@@ -1,0 +1,65 @@
+name: Build Windows Binary
+permissions:
+  contents: write
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (e.g., v0.1.3)"
+        required: true
+        default: "v0.1.3"
+
+env:
+  CARGO_TERM_COLOR: always
+  APP_VERSION: ${{ github.event.inputs.version || 'v0.1.3' }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        target: [x86_64-pc-windows-msvc]
+
+    steps:
+      - name: Checkout shoes repository
+        uses: actions/checkout@v4
+        with:
+          repository: cfal/shoes
+          ref: APP_VERSION
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          profile: minimal
+          override: true
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build Release Binary
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary for release
+        run: |
+          copy target\${{ matrix.target }}\release\shoes.exe shoes-${{ env.APP_VERSION }}-${{ matrix.target }}.exe
+
+      - name: Create Tag
+        run: |
+          git tag ${{ env.APP_VERSION }} || true
+          git push origin ${{ env.APP_VERSION }} || true
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: shoes-${{ env.APP_VERSION }}-${{ matrix.target }}.exe
+          tag_name: ${{ env.APP_VERSION }}
+          name: Release ${{ env.APP_VERSION }}
+          body: "Windows binary build"
+          draft: false
+          prerelease: false
+          repository: ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

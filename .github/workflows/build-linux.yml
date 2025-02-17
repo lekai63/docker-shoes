@@ -3,8 +3,8 @@ permissions:
   contents: write
   packages: write # 授予包的写入权限
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
     inputs:
       version:
