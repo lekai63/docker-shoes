@@ -1,0 +1,28 @@
+- address: 0.0.0.0:5555
+  transport: tcp
+  protocol:
+    type: ws
+    targets:
+      # clash-verge可以连接到/vv
+      - matching_path: /vv
+        matching_headers:
+          host: "shoes.example.com" # 添加 host 以便nginx分流
+        protocol:
+          type: vmess
+          cipher: any
+          user_id: 2b8798ff-8b47-452e-8051-8c775616b85b # 注意与client一致
+      # 使用shoes作为客户端可以连接到/ss，但clash-verge似乎不能连接到/ss
+      - matching_path: /ss
+        matching_headers:
+          host: "shoes.example.com" # 添加 host 以便nginx分流
+        protocol:
+          type: shadowsocks
+          cipher: 2022-blake3-aes-256-gcm
+          # 密码生成命令 openssl rand -base64 32
+          # 最后的32表示密码位数，如果你用2022-blake3-aes-123-gcm，则命令为openssl rand -base64 16
+          password: L5w9Lh/hBZjnIhhPB/suDnXR/MRl+OW1MfCpyxEFn3Q=
+  rules:
+    - mask: 0.0.0.0/0
+      action: allow
+      # Direct connection, don't forward requests through another proxy.
+      client_proxy: direct
