@@ -1,5 +1,6 @@
 name: Build Linux Binary
-
+permissions:
+  contents: write
 on:
   push:
     branches: [main]
@@ -49,17 +50,20 @@ jobs:
         run: |
           cargo build --release --target ${{ matrix.target }}
 
-      - name: Rename binary for release
+      - name: Create Tag
         run: |
-          cp target/${{ matrix.target }}/release/shoes shoes-${{ env.APP_VERSION }}-${{ matrix.target }}
+          git tag ${{ env.APP_VERSION }} || true
+          git push origin ${{ env.APP_VERSION }} || true
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: shoes-${{ env.APP_VERSION }}-${{ matrix.target }}
+          files: target/${{ matrix.target }}/release/shoes
           tag_name: ${{ env.APP_VERSION }}
           name: Release ${{ env.APP_VERSION }}
           body: "Linux binary build"
+          draft: false
+          prerelease: false
           repository: ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
