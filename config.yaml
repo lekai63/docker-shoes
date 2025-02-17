@@ -1,0 +1,11 @@
+- address: 0.0.0.0:5555
+  transport: tcp
+  protocol:
+    type: vmess
+    cipher: any
+    user_id: 2b8798ff-8b47-452e-8051-8c775616b85b
+  rules:
+    - mask: 0.0.0.0/0
+      action: allow
+      # Direct connection, don't forward requests through another proxy.
+      client_proxy: direct
