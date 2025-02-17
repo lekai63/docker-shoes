@@ -1,6 +1,7 @@
 name: Build Linux Binary
 permissions:
   contents: write
+  packages: write # 授予包的写入权限
 on:
   push:
     branches: [main]
@@ -124,5 +125,5 @@ jobs:
             APP_VERSION=${{ env.APP_VERSION }}
             BINARY_NAME=shoes
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ env.APP_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ env.APP_VERSION }}
