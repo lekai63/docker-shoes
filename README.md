@@ -197,4 +197,8 @@ proxies:
       v2ray-http-upgrade-fast-open: false
 ```
 
-如需使用shoes作为client，可参考本仓库 [example_for_nginx/client.yaml]
+如需使用shoes作为client，可参考本仓库 [example_for_nginx/client.yaml](https://github.com/lekai63/docker-shoes/blob/main/example_for_nginx/client.yaml)
+
+# 鸣谢
+
+[cfal/shoes](https://github.com/cfal/shoes)
