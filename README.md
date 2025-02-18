@@ -46,14 +46,16 @@ services:
       - docker_default
 
   shoes:
-    image: lekai63/shoes:v0.1.3
+    image: ghcr.io/lekai63/docker-shoes:v0.1.3
     container_name: shoes
-    # nginx docker 直接转发到 shoes docker，在shoes docker中可不暴露ports到主机
-    #ports:
-    #    - "5555:5555"
+    # nginx docker 直接转发到 shoes docker，在shoes docker中可以不暴露ports到主机
+    ports:
+      - "5555:5555"
     volumes:
       - ./data/shoes/server.yaml:/app/config.yaml
     restart: unless-stopped
+    networks:
+      - docker_default
 ```
 
 ### nginx
