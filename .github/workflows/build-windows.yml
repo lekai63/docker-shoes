@@ -26,7 +26,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cfal/shoes
-          ref: APP_VERSION
+
+      - name: Checkout version
+        run: |
+          git fetch --tags
+          git checkout ${{ env.APP_VERSION }}
+        shell: bash
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
