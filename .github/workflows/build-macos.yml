@@ -44,7 +44,7 @@ jobs:
 
       - name: Rename binary for release
         run: |
-          cp target/${{ matrix.target }}/release/shoes shoes-${{ env.APP_VERSION }}-${{ matrix.target }}
+          cp target/aarch64-apple-darwin/release/shoes shoes-${{ env.APP_VERSION }}-aarch64-apple-darwin
 
       - name: Create Tag
         run: |
@@ -55,7 +55,7 @@ jobs:
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: shoes-${{ env.APP_VERSION }}-${{ matrix.target }}
+          files: shoes-${{ env.APP_VERSION }}-aarch64-apple-darwin
           tag_name: ${{ env.APP_VERSION }}
           name: Release ${{ env.APP_VERSION }}
           body: "MacOS M1 binary build" # Release 的描述
