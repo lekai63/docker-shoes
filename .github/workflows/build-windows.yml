@@ -3,8 +3,8 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches: [main, master]
+  # push:
+  #   branches: [main, master]
   workflow_dispatch:
     inputs:
       version:
@@ -59,6 +59,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      # 因为代码使用了 `std::os::fd` 模块，但该模块在 Windows 平台上不可用，导致编译错误。
       - name: Build Release Binary
         run: |
           cargo build --release --target ${{ matrix.target }}

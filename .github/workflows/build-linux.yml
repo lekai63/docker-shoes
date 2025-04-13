@@ -96,28 +96,52 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: List releases
+        run: |
+          echo "Checking for release: ${{ needs.get-shoes-ref.outputs.version }}"
+          gh release list
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Download musl binary
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const releaseTag = '${{ needs.get-shoes-ref.outputs.version }}';
+            if (!releaseTag) {
+              throw new Error('Release tag is empty');
+            }
+
             const fileName = `shoes-${releaseTag}-x86_64-unknown-linux-musl`;
+            console.log(`Searching for asset: ${fileName}`);
 
-            const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: releaseTag
-            });
+            try {
+              const release = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: releaseTag
+              });
 
-            const asset = release.data.assets.find(asset => asset.name === fileName);
-            if (!asset) throw new Error(`Asset ${fileName} not found`);
+              const asset = release.data.assets.find(asset => asset.name === fileName);
+              if (!asset) {
+                throw new Error(`Asset ${fileName} not found in release`);
+              }
 
-            const response = await fetch(asset.browser_download_url);
-            const buffer = await response.arrayBuffer();
-            fs.writeFileSync('shoes', new Uint8Array(buffer));
+              console.log(`Downloading asset from: ${asset.browser_download_url}`);
+              const response = await fetch(asset.browser_download_url);
+              if (!response.ok) {
+                throw new Error(`Failed to download asset: ${response.statusText}`);
+              }
 
-            await exec.exec('chmod', ['+x', 'shoes']);
+              const buffer = await response.arrayBuffer();
+              fs.writeFileSync('shoes', new Uint8Array(buffer));
+
+              await exec.exec('chmod', ['+x', 'shoes']);
+            } catch (error) {
+              console.error('Error details:', error);
+              throw error;
+            }
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
