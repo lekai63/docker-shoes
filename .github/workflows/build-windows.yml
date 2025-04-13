@@ -1,7 +1,10 @@
 name: Build Windows Binary
 permissions:
   contents: write
+
 on:
+  push:
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       version:
@@ -11,12 +14,30 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  APP_VERSION: ${{ github.event.inputs.version || 'v0.1.3' }}
 
 jobs:
-  build:
+  get-shoes-ref:
     runs-on: windows-latest
+    outputs:
+      ref: ${{ steps.get-ref.outputs.ref }}
+      version: ${{ steps.get-ref.outputs.version }}
+    steps:
+      - name: Determine ref and version
+        id: get-ref
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            echo "ref=${{ github.event.inputs.version }}" >> $env:GITHUB_OUTPUT
+            echo "version=${{ github.event.inputs.version }}" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "ref=master" >> $env:GITHUB_OUTPUT
+            $timestamp = Get-Date -Format "yyyyMMddHHmm"
+            echo "version=master-$timestamp" >> $env:GITHUB_OUTPUT
+          }
 
+  build:
+    needs: get-shoes-ref
+    runs-on: windows-latest
     strategy:
       matrix:
         target: [x86_64-pc-windows-msvc]
@@ -26,12 +47,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cfal/shoes
-
-      - name: Checkout version
-        run: |
-          git fetch --tags
-          git checkout ${{ env.APP_VERSION }}
-        shell: bash
+          ref: ${{ needs.get-shoes-ref.outputs.ref }}
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -49,19 +65,19 @@ jobs:
 
       - name: Rename binary for release
         run: |
-          copy target\${{ matrix.target }}\release\shoes.exe shoes-${{ env.APP_VERSION }}-${{ matrix.target }}.exe
+          copy target\${{ matrix.target }}\release\shoes.exe shoes-${{ needs.get-shoes-ref.outputs.version }}-${{ matrix.target }}.exe
 
       - name: Create Tag
         run: |
-          git tag ${{ env.APP_VERSION }} || true
-          git push origin ${{ env.APP_VERSION }} || true
+          git tag ${{ needs.get-shoes-ref.outputs.version }} || true
+          git push origin ${{ needs.get-shoes-ref.outputs.version }} || true
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: shoes-${{ env.APP_VERSION }}-${{ matrix.target }}.exe
-          tag_name: ${{ env.APP_VERSION }}
-          name: Release ${{ env.APP_VERSION }}
+          files: shoes-${{ needs.get-shoes-ref.outputs.version }}-${{ matrix.target }}.exe
+          tag_name: ${{ needs.get-shoes-ref.outputs.version }}
+          name: Release ${{ needs.get-shoes-ref.outputs.version }}
           body: "Windows binary build"
           draft: false
           prerelease: false

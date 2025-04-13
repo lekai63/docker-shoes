@@ -2,9 +2,8 @@ name: Build macOS Binary
 permissions:
   contents: write
 on:
-  # push:
-  #   branches: [ main ]
-  # 手动触发
+  push:
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       version:
@@ -14,53 +13,71 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  APP_VERSION: ${{ github.event.inputs.version || 'v0.1.3' }}
 
 jobs:
-  build:
+  get-shoes-ref:
     runs-on: macos-latest
+    outputs:
+      ref: ${{ steps.get-ref.outputs.ref }}
+      version: ${{ steps.get-ref.outputs.version }}
+    steps:
+      - name: Determine ref and version
+        id: get-ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=master" >> $GITHUB_OUTPUT
+            echo "version=master-$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: get-shoes-ref
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
 
     steps:
       - name: Checkout shoes repository
         uses: actions/checkout@v4
         with:
           repository: cfal/shoes
-          ref: ${{ env.APP_VERSION }}
+          ref: ${{ needs.get-shoes-ref.outputs.ref }}
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: aarch64-apple-darwin
+          target: ${{ matrix.target }}
           profile: minimal
           override: true
 
-      # 添加cargo缓存
       - uses: Swatinem/rust-cache@v2
 
       - name: Build Release Binary
         run: |
-          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target ${{ matrix.target }}
 
       - name: Rename binary for release
         run: |
-          cp target/aarch64-apple-darwin/release/shoes shoes-${{ env.APP_VERSION }}-aarch64-apple-darwin
+          cp target/${{ matrix.target }}/release/shoes shoes-${{ needs.get-shoes-ref.outputs.version }}-${{ matrix.target }}
 
       - name: Create Tag
         run: |
-          git tag ${{ env.APP_VERSION }} || true
-          git push origin ${{ env.APP_VERSION }} || true
+          git tag ${{ needs.get-shoes-ref.outputs.version }} || true
+          git push origin ${{ needs.get-shoes-ref.outputs.version }} || true
 
-      # 上传到 Release
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: shoes-${{ env.APP_VERSION }}-aarch64-apple-darwin
-          tag_name: ${{ env.APP_VERSION }}
-          name: Release ${{ env.APP_VERSION }}
-          body: "MacOS M1 binary build" # Release 的描述
+          files: shoes-${{ needs.get-shoes-ref.outputs.version }}-${{ matrix.target }}
+          tag_name: ${{ needs.get-shoes-ref.outputs.version }}
+          name: Release ${{ needs.get-shoes-ref.outputs.version }}
+          body: "macOS binary build for ${{ matrix.target }}"
           draft: false
           prerelease: false
           repository: ${{ github.repository }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 使用 GitHub 提供的 token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
