@@ -1,0 +1,27 @@
+# An HTTP server (no TLS) that forwards connections via a SOCKS5 server.
+- address: 0.0.0.0:5555
+  transport: tcp
+  protocol:
+    type: http
+    # username: secretuser
+    # password: secretpass
+  rules:
+    - mask: 0.0.0.0/0
+      action: allow
+      client_proxy:
+        - address: shoes.quarkmed.com:443
+          protocol:
+            type: tls
+            verify: false
+            sni_hostname: shoes.quarkmed.com
+            protocol:
+              type: ws
+              matching_path: /vv
+              matching_headers:
+                host: "shoes.quarkmed.com"
+              protocol:
+                type: vmess
+                cipher: any
+                user_id: e871b25c-709d-45ea-9ff3-bda2581af70
+                force_aead: false
+                udp_enabled: false

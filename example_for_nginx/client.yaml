@@ -1,0 +1,33 @@
+- address: 127.0.0.1:7890
+  transport: tcp
+  protocol:
+    type: socks
+    # username: secretuser
+    # password: secretpass
+  rules:
+    # Directly connect to 192.168.*
+    - mask: 192.168.0.0/16
+      action: allow
+      client_proxy: direct
+    # Forward all other connection requests through a Vmess WSS server.
+    - mask: 0.0.0.0/0
+      action: allow
+      client_proxy:
+        - address: 1.2.3.4:443 # 服务器ip 或域名
+          protocol:
+            type: tls
+            # Set to false to disable TLS verification, if, for example, the upstream server
+            # uses a self-signed certificate
+            verify: false # 自签名证书用false，否则可以写true
+            sni_hostname: shoes.example.com
+            protocol:
+              type: ws
+              matching_path: /vv
+              matching_headers:
+                host: "shoes.example.com" # 添加 hosts,以便nginx分流
+                # X-Secret-Key: "passwd"
+              protocol:
+                # force_aead: true
+                type: vmess
+                cipher: any
+                user_id: 2b8798ff-8b47-452e-8051-8c775616b85b

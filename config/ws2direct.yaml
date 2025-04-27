@@ -1,0 +1,19 @@
+- address: 0.0.0.0:5555
+  transport: tcp
+  protocol:
+    type: ws
+    targets:
+      - matching_path: /vv
+        matching_headers:
+          host: "shoes.quarkmed.com"
+        protocol:
+          type: vmess
+          cipher: any
+          user_id: e871b25c-709d-45ea-9ff3-bda2581af70
+          force_aead: false
+          udp_enabled: false
+  rules:
+    # allow connections to all ips
+    - mask: 0.0.0.0/0
+      action: allow
+      client_proxy: direct

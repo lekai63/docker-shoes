@@ -1,0 +1,23 @@
+# 如果不用shoes作为客户端，也可以用mihomo，配置如下
+# 如果需要loon，可自行转换
+proxies:
+  - name: shoes_vmess
+    type: vmess
+    server: 1.2.3.4
+    port: 443
+    udp: false
+    uuid: 2b8798ff-8b47-452e-8051-8c775616b85b
+    alterId: 0
+    cipher: auto
+    tls: true
+    servername: shoes.example.com
+    alpn:
+      - h2
+      - http/1.1
+    network: ws
+    ws-opts:
+      path: /vv
+      headers:
+        Host: "shoes.example.com"
+      v2ray-http-upgrade: false
+      v2ray-http-upgrade-fast-open: false

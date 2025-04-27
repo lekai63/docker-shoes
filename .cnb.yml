@@ -1,0 +1,25 @@
+$:
+  tag_push:
+    - docker:
+        image: docker.cnb.cool/znb/images/debian:all
+      services:
+        - docker
+      runner:
+        cpus: 2
+      stages:
+        # 用${CNB_TAG}作为对每个容器平台的配置名，${CNB_TAG}配置为该容器平台名称 比如 render
+        - name: prepare shoes and config.yaml
+          script: |
+            echo "Renaming shoes binary and config file..."
+            mv shoes-v0.1.3-x86_64-unknown-linux-musl shoes
+            mv configs/${CNB_TAG}.yaml config.yaml
+            echo "Renaming complete."
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: docker build \
+            --build-arg APP_VERSION=${CNB_TAG} \
+            --build-arg BINARY_NAME=shoes \
+            -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH} .
+        - name: docker push
+          script: docker push ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH}
