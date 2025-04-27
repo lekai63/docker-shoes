@@ -18,7 +18,7 @@ $:
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
         - name: docker build
           script: docker build \
-            --build-arg APP_VERSION=${CNB_TAG} \
+            --build-arg APP_VERSION=${CNB_BRANCH} \
             --build-arg BINARY_NAME=shoes \
             -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH} .
         - name: docker push
