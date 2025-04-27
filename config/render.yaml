@@ -5,7 +5,7 @@
     targets:
       - matching_path: /vv
         matching_headers:
-          host: "shoes.quarkmed.com"
+          host: "docker-shoes-render.onrender.com"
         protocol:
           type: vmess
           cipher: any

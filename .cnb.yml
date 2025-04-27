@@ -10,12 +10,12 @@ $:
       env:
         CNB_IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH}
         DOCKERHUB_IMAGE_TAG: ${DOCKERHUB_USER}/${CNB_REPO_NAME_LOWERCASE}:${CNB_BRANCH}
+        BINARY_NAME: shoes-v0.1.3-x86_64-unknown-linux-musl
       stages:
         # 用${CNB_BRANCH}作为对每个容器平台的配置名，${CNB_BRANCH}配置为该容器平台名称 比如 render
         - name: prepare shoes and config.yaml
           script: |
-            echo "Renaming shoes binary and config file..."
-            mv shoes-v0.1.3-x86_64-unknown-linux-musl shoes
+            echo "Renaming config file..."
             mv config/${CNB_BRANCH}.yaml config.yaml
             echo "Renaming complete."
         - name: docker login CNB Registry
@@ -31,7 +31,7 @@ $:
             echo "  - ${CNB_IMAGE_TAG}"
             echo "  - ${DOCKERHUB_IMAGE_TAG}"
             # 使用两个 -t 参数为同一个构建结果打上两个标签
-            docker build --build-arg APP_VERSION=${CNB_BRANCH} --build-arg BINARY_NAME=shoes -t ${CNB_IMAGE_TAG} -t ${DOCKERHUB_IMAGE_TAG} .
+            docker build --no-cache --build-arg APP_VERSION=${CNB_BRANCH} --build-arg BINARY_NAME=${BINARY_NAME} -t ${CNB_IMAGE_TAG} -t ${DOCKERHUB_IMAGE_TAG} .
 
         # 推送镜像到 CNB 仓库
         - name: docker push CNB Registry
