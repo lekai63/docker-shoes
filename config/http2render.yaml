@@ -1,5 +1,5 @@
 # An HTTP server (no TLS) that forwards connections via a SOCKS5 server.
-- address: 0.0.0.0:5555
+- address: 0.0.0.0:8080
   transport: tcp
   protocol:
     type: http

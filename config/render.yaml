@@ -1,3 +1,7 @@
+# The default value of PORT is 10000
+# https://render.com/docs/web-services#port-binding
+# 否则需要在render 的环境变量中指定 PORT（5555）
+# render 15分钟没流量就关闭
 - address: 0.0.0.0:5555
   transport: tcp
   protocol:
