@@ -22,6 +22,6 @@
               protocol:
                 type: vmess
                 cipher: any
-                user_id: e871b25c-709d-45ea-9ff3-bda2581af70
+                user_id: 969171c6-0691-478e-8223-564fa2770cf1
                 force_aead: false
                 udp_enabled: false
