@@ -22,7 +22,7 @@ $:
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
 
         - name: docker login Docker Hub
-          script: docker login -u ${DOCKERHUB_USER} -p "${DOCKERHUB_TOKEN}
+          script: docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_TOKEN}
 
         # 构建镜像并同时打上两个标签
         - name: docker build and tag
