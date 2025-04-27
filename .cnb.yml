@@ -7,6 +7,9 @@ $:
       runner:
         cpus: 2
       imports: https://cnb.cool/0_0/secrets/-/blob/main/dockerhub.yml
+      env:
+        CNB_IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH}
+        DOCKERHUB_IMAGE_TAG: ${DOCKERHUB_USER}/${CNB_REPO_NAME_LOWERCASE}:${CNB_BRANCH}
       stages:
         # 用${CNB_BRANCH}作为对每个容器平台的配置名，${CNB_BRANCH}配置为该容器平台名称 比如 render
         - name: prepare shoes and config.yaml
@@ -19,13 +22,11 @@ $:
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
 
         - name: docker login Docker Hub
-          script: docker login -u ${DOCKERHUB_USER} -p "${DOCKERHUB_TOKEN
+          script: docker login -u ${DOCKERHUB_USER} -p "${DOCKERHUB_TOKEN}
 
         # 构建镜像并同时打上两个标签
         - name: docker build and tag
           script: |
-            CNB_IMAGE_TAG="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH}"
-            DOCKERHUB_IMAGE_TAG="${DOCKERHUB_USER}/${CNB_REPO_NAME_LOWERCASE}:${CNB_BRANCH}"
             echo "Building image with tags:"
             echo "  - ${CNB_IMAGE_TAG}"
             echo "  - ${DOCKERHUB_IMAGE_TAG}"
@@ -34,9 +35,9 @@ $:
 
         # 推送镜像到 CNB 仓库
         - name: docker push CNB Registry
-          script: docker push ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${CNB_BRANCH}
+          script: docker push ${CNB_IMAGE_TAG}
 
         # 推送镜像到 Docker Hub
         - name: docker push Docker Hub
           # 使用 Docker Hub 格式的标签进行推送
-          script: docker push ${DOCKERHUB_USER}/${CNB_REPO_NAME_LOWERCASE}:${CNB_BRANCH}
+          script: docker push ${DOCKERHUB_IMAGE_TAG}
