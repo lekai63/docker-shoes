@@ -7,12 +7,12 @@ $:
       runner:
         cpus: 2
       stages:
-        # 用${CNB_TAG}作为对每个容器平台的配置名，${CNB_TAG}配置为该容器平台名称 比如 render
+        # 用${CNB_BRANCH}作为对每个容器平台的配置名，${CNB_BRANCH}配置为该容器平台名称 比如 render
         - name: prepare shoes and config.yaml
           script: |
             echo "Renaming shoes binary and config file..."
             mv shoes-v0.1.3-x86_64-unknown-linux-musl shoes
-            mv config/${CNB_TAG}.yaml config.yaml
+            mv config/${CNB_BRANCH}.yaml config.yaml
             echo "Renaming complete."
         - name: docker login
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
