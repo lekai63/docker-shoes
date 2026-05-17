@@ -7,9 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to build (e.g., v0.1.3)"
+        description: "Shoes version to build (e.g., v0.2.7)"
         required: true
-        default: "v0.1.3"
+        default: "v0.2.7"
+      config:
+        description: "Config file under config/ without .yaml"
+        required: true
+        default: "render"
 
 jobs:
   docker-build:
@@ -18,52 +22,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List releases
-        run: |
-          echo "Checking for release: ${{ github.event.inputs.version }}"
-          gh release list
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Download musl binary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const releaseTag = '${{ github.event.inputs.version }}';
-            if (!releaseTag) {
-              throw new Error('Release tag is empty');
-            }
+        run: |
+          set -euo pipefail
 
-            const fileName = `shoes-${releaseTag}-x86_64-unknown-linux-musl`;
-            console.log(`Searching for asset: ${fileName}`);
+          release_tag="${{ github.event.inputs.version }}"
+          asset_name="shoes-x86_64-unknown-linux-musl.tar.gz"
+          asset_url="https://github.com/cfal/shoes/releases/download/${release_tag}/${asset_name}"
 
-            try {
-              const release = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: releaseTag
-              });
+          echo "Downloading ${asset_url}"
+          curl -fL "${asset_url}" -o "${asset_name}"
+          tar -xzf "${asset_name}"
+          chmod +x shoes
 
-              const asset = release.data.assets.find(asset => asset.name === fileName);
-              if (!asset) {
-                throw new Error(`Asset ${fileName} not found in release`);
-              }
+      - name: Prepare config
+        run: |
+          set -euo pipefail
 
-              console.log(`Downloading asset from: ${asset.browser_download_url}`);
-              const response = await fetch(asset.browser_download_url);
-              if (!response.ok) {
-                throw new Error(`Failed to download asset: ${response.statusText}`);
-              }
+          config_name="${{ github.event.inputs.config }}"
+          config_path="config/${config_name}.yaml"
 
-              const buffer = await response.arrayBuffer();
-              fs.writeFileSync('shoes', new Uint8Array(buffer));
+          if [ ! -f "${config_path}" ]; then
+            echo "Config file not found: ${config_path}" >&2
+            exit 1
+          fi
 
-              await exec.exec('chmod', ['+x', 'shoes']);
-            } catch (error) {
-              console.error('Error details:', error);
-              throw error;
-            }
+          cp "${config_path}" config.yaml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
